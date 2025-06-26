@@ -40,7 +40,13 @@ ExTrack is a comprehensive Flutter application for tracking personal finances, m
 
 ## Screenshots
 
-*Screenshots will be added soon*
+| Dashboard | Transactions | Categories |
+|:---------:|:------------:|:----------:|
+| <img src="assets/screenshots/main-dashboard.jpg" width="250" alt="Dashboard"> | <img src="assets/screenshots/transaction-list.jpg" width="250" alt="Transactions List"> | <img src="assets/screenshots/categories.jpg" width="250" alt="Categories"> |
+
+| Reminders | Settings |
+|:---------:|:--------:|
+| <img src="assets/screenshots/reminder.jpg" width="250" alt="Reminders"> | <img src="assets/screenshots/settings.jpg" width="250" alt="Settings"> |
 
 ## Installation
 
