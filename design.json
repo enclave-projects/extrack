@@ -1,0 +1,353 @@
+{
+    "designSystem": {
+      "name": "Modern Financial App Design System",
+      "version": "1.0.0",
+      "description": "Dark theme financial application with card-based layouts and vibrant accent colors"
+    },
+    
+    "colorPalette": {
+      "backgrounds": {
+        "primary": "#5A5A5A",
+        "secondary": "#F5F5F5", 
+        "cardDark": "#2C2C2C",
+        "cardLight": "#FFFFFF",
+        "overlay": "rgba(0,0,0,0.5)"
+      },
+      "accents": {
+        "orange": "#FF9500",
+        "green": "#34C759",
+        "red": "#FF3B30",
+        "blue": "#007AFF",
+        "purple": "#AF52DE"
+      },
+      "neutrals": {
+        "textPrimary": "#FFFFFF",
+        "textSecondary": "#8E8E93",
+        "textDark": "#1D1D1F",
+        "border": "#E5E5E7",
+        "divider": "#F2F2F7"
+      }
+    },
+  
+    "elementStyling": {
+      "cards": {
+        "primary": {
+          "background": "#2C2C2C",
+          "borderRadius": "16px",
+          "shadow": "0 4px 20px rgba(0,0,0,0.1)",
+          "padding": "20px",
+          "border": "none",
+          "context": "Main balance card, transaction cards"
+        },
+        "secondary": {
+          "background": "#FFFFFF",
+          "borderRadius": "16px", 
+          "shadow": "0 2px 10px rgba(0,0,0,0.05)",
+          "padding": "16px",
+          "border": "1px solid #F2F2F7",
+          "context": "Statistics card, invoice card"
+        },
+        "creditCard": {
+          "background": "linear-gradient(135deg, #2C2C2C 0%, #1C1C1E 100%)",
+          "borderRadius": "12px",
+          "shadow": "0 4px 12px rgba(0,0,0,0.15)",
+          "padding": "16px",
+          "border": "none",
+          "overlay": "rgba(255,149,0,0.1)",
+          "context": "Payment card display only"
+        }
+      },
+  
+      "buttons": {
+        "primary": {
+          "background": "#1D1D1F",
+          "text": "#FFFFFF",
+          "borderRadius": "12px",
+          "padding": "12px 24px",
+          "border": "none",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "shadow": "0 2px 8px rgba(0,0,0,0.15)",
+          "hover": {
+            "background": "#2C2C2E",
+            "transform": "translateY(-1px)"
+          },
+          "context": "Save Invoice, primary actions"
+        },
+        "secondary": {
+          "background": "transparent",
+          "text": "#007AFF",
+          "borderRadius": "12px",
+          "padding": "12px 24px",
+          "border": "1px solid #E5E5E7",
+          "fontSize": "16px",
+          "fontWeight": "500",
+          "hover": {
+            "background": "#F2F2F7",
+            "border": "1px solid #D1D1D6"
+          },
+          "context": "Secondary actions, cancel buttons"
+        },
+        "floating": {
+          "background": "#1D1D1F",
+          "text": "#FFFFFF",
+          "borderRadius": "50%",
+          "width": "56px",
+          "height": "56px",
+          "border": "none",
+          "shadow": "0 4px 16px rgba(0,0,0,0.2)",
+          "icon": {
+            "size": "24px",
+            "color": "#FFFFFF"
+          },
+          "hover": {
+            "background": "#2C2C2E",
+            "transform": "scale(1.05)"
+          },
+          "context": "Add transaction, floating action buttons"
+        }
+      },
+  
+      "icons": {
+        "primary": {
+          "fill": "#FFFFFF",
+          "size": "24px",
+          "context": "Icons on dark backgrounds"
+        },
+        "secondary": {
+          "fill": "#1D1D1F",
+          "size": "20px",
+          "context": "Icons on light backgrounds"
+        },
+        "accent": {
+          "fill": "#FF9500",
+          "size": "16px",
+          "context": "Status indicators, badges"
+        },
+        "navigation": {
+          "fill": "#8E8E93",
+          "size": "28px",
+          "fillActive": "#1D1D1F",
+          "context": "Bottom navigation, tab bars"
+        }
+      },
+  
+      "typography": {
+        "heading1": {
+          "fontSize": "32px",
+          "fontWeight": "700",
+          "color": "#FFFFFF",
+          "lineHeight": "1.2",
+          "context": "Balance amounts, primary headings"
+        },
+        "heading2": {
+          "fontSize": "24px",
+          "fontWeight": "600", 
+          "color": "#1D1D1F",
+          "lineHeight": "1.3",
+          "context": "Card titles, section headers"
+        },
+        "body": {
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "color": "#1D1D1F",
+          "lineHeight": "1.4",
+          "context": "General text content"
+        },
+        "caption": {
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "#8E8E93",
+          "lineHeight": "1.3",
+          "context": "Secondary information, dates"
+        },
+        "amount": {
+          "fontSize": "18px",
+          "fontWeight": "600",
+          "color": "#1D1D1F",
+          "lineHeight": "1.2",
+          "context": "Transaction amounts, pricing"
+        }
+      },
+  
+      "charts": {
+        "line": {
+          "stroke": "#1D1D1F",
+          "strokeWidth": "2px",
+          "fill": "none",
+          "point": {
+            "fill": "#FFFFFF",
+            "stroke": "#1D1D1F",
+            "strokeWidth": "2px",
+            "radius": "4px"
+          },
+          "grid": {
+            "stroke": "#F2F2F7",
+            "strokeWidth": "1px"
+          },
+          "context": "Statistics line charts"
+        }
+      },
+  
+      "containers": {
+        "screen": {
+          "background": "#5A5A5A",
+          "padding": "0px",
+          "context": "App background, main screens"
+        },
+        "modal": {
+          "background": "#FFFFFF",
+          "borderRadius": "20px 20px 0 0",
+          "shadow": "0 -4px 20px rgba(0,0,0,0.1)",
+          "padding": "24px",
+          "context": "Bottom sheets, modals"
+        },
+        "section": {
+          "background": "transparent",
+          "padding": "16px 20px",
+          "gap": "12px",
+          "context": "Content sections within cards"
+        }
+      },
+  
+      "transactions": {
+        "item": {
+          "background": "transparent",
+          "padding": "12px 0",
+          "borderBottom": "1px solid #F2F2F7",
+          "icon": {
+            "background": "#F2F2F7",
+            "borderRadius": "8px",
+            "padding": "8px",
+            "size": "20px"
+          },
+          "amount": {
+            "positive": "#34C759",
+            "negative": "#FF3B30",
+            "neutral": "#1D1D1F"
+          },
+          "context": "Transaction list items"
+        }
+      },
+  
+      "forms": {
+        "input": {
+          "background": "#FFFFFF",
+          "border": "1px solid #E5E5E7",
+          "borderRadius": "8px",
+          "padding": "12px 16px",
+          "fontSize": "16px",
+          "color": "#1D1D1F",
+          "placeholder": "#8E8E93",
+          "focus": {
+            "border": "1px solid #007AFF",
+            "shadow": "0 0 0 3px rgba(0,122,255,0.1)"
+          },
+          "context": "Form inputs, search fields"
+        },
+        "label": {
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "color": "#1D1D1F",
+          "marginBottom": "8px",
+          "context": "Form field labels"
+        }
+      },
+  
+      "badges": {
+        "status": {
+          "background": "#34C759",
+          "color": "#FFFFFF",
+          "borderRadius": "4px",
+          "padding": "4px 8px",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "context": "Status indicators, tags"
+        },
+        "notification": {
+          "background": "#FF3B30",
+          "color": "#FFFFFF",
+          "borderRadius": "50%",
+          "width": "8px",
+          "height": "8px",
+          "context": "Notification dots"
+        }
+      }
+    },
+  
+    "spacing": {
+      "xs": "4px",
+      "sm": "8px", 
+      "md": "12px",
+      "lg": "16px",
+      "xl": "20px",
+      "xxl": "24px",
+      "xxxl": "32px"
+    },
+  
+    "borderRadius": {
+      "small": "4px",
+      "medium": "8px",
+      "large": "12px",
+      "xlarge": "16px",
+      "xxlarge": "20px",
+      "round": "50%"
+    },
+  
+    "shadows": {
+      "small": "0 2px 4px rgba(0,0,0,0.05)",
+      "medium": "0 4px 12px rgba(0,0,0,0.1)",
+      "large": "0 8px 24px rgba(0,0,0,0.15)",
+      "card": "0 4px 20px rgba(0,0,0,0.1)"
+    },
+  
+    "animations": {
+      "duration": {
+        "fast": "150ms",
+        "normal": "300ms",
+        "slow": "500ms"
+      },
+      "easing": {
+        "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "enter": "cubic-bezier(0, 0, 0.2, 1)",
+        "exit": "cubic-bezier(0.4, 0, 1, 1)"
+      }
+    },
+  
+    "applicationRules": {
+      "DO_NOT": [
+        "Apply card gradients to icons or buttons",
+        "Use primary button colors for text elements", 
+        "Apply shadow effects to text content",
+        "Use dark theme colors on light backgrounds",
+        "Mix border radius values within the same component",
+        "Apply card padding to individual text elements",
+        "Use accent colors for large background areas",
+        "Apply hover effects to static content",
+        "Use heading typography for body text",
+        "Mix shadow depths within the same component group"
+      ],
+      "ALWAYS": [
+        "Use consistent border radius within component families",
+        "Apply shadows to container elements, not content",
+        "Use semantic color names based on context",
+        "Maintain consistent spacing between related elements",
+        "Apply hover states only to interactive elements",
+        "Use appropriate typography hierarchy",
+        "Maintain color contrast ratios for accessibility",
+        "Use consistent icon sizing within contexts",
+        "Apply consistent padding to similar components",
+        "Use semantic color values for transaction amounts"
+      ]
+    },
+  
+    "componentMapping": {
+      "BalanceCard": "cards.primary + typography.heading1",
+      "TransactionItem": "transactions.item + typography.body",
+      "StatisticsCard": "cards.secondary + charts.line",
+      "InvoiceCard": "cards.secondary + forms.input",
+      "NavigationButton": "buttons.floating + icons.navigation",
+      "PrimaryButton": "buttons.primary + typography.body",
+      "SecondaryButton": "buttons.secondary + typography.body"
+    }
+  }

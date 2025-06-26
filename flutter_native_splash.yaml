@@ -1,0 +1,14 @@
+flutter_native_splash:
+  # Background color for the splash screen
+  color: "#FFFFFF"
+  
+  # Path to splash screen image
+  image: assets/logo/track.png
+  
+  # Ensure the image is properly displayed
+  android: true
+  ios: true
+  web: false
+  
+  # Full screen splash screen
+  fullscreen: true 
