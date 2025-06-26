@@ -60,7 +60,7 @@ ExTrack is a comprehensive Flutter application for tracking personal finances, m
 ### Setup
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/extrack.git
+   git clone https://github.com/enclave-projects/extrack.git
    ```
 2. Navigate to the project directory
    ```
@@ -91,6 +91,8 @@ flutter build ios --release
 ```
 flutter build windows --release
 ```
+
+*This application is more compatible with Android, not with the iOS, macOS or Windows*
 
 ## Technologies Used
 
