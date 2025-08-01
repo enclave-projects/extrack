@@ -34,12 +34,17 @@ dependencies:
   intl: ^0.19.0
   flutter_local_notifications: ^19.3.0
   timezone: ^0.10.1
+  # Export dependencies
+  pdf: ^3.11.1
+  path_provider: ^2.1.4
+  csv: ^6.0.0
   
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_native_splash: ^2.4.6
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
