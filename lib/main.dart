@@ -17,9 +17,95 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:lottie/lottie.dart';
+import 'dart:math' as math;
+import 'package:lottie/lottie.dart';
 
 // Define action IDs for notifications
 const String markAsDoneActionId = 'mark_as_done';
+
+// Loading Widget with Lottie Animation
+class LoadingWidget extends StatelessWidget {
+  final String? message;
+  final double size;
+  
+  const LoadingWidget({
+    super.key,
+    this.message,
+    this.size = 120,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.network(
+            'https://lottie.host/embed/8de76ebf-81fe-4064-8627-a96ae50a9a2b/b9WtSX7qqP.lottie',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback to circular progress indicator if Lottie fails to load
+              return SizedBox(
+                width: size * 0.5,
+                height: size * 0.5,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).primaryColor,
+                  ),
+                ),
+              );
+            },
+          ),
+          if (message != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              message!,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// Loading Overlay Widget
+class LoadingOverlay extends StatelessWidget {
+  final Widget child;
+  final bool isLoading;
+  final String? loadingMessage;
+  
+  const LoadingOverlay({
+    super.key,
+    required this.child,
+    required this.isLoading,
+    this.loadingMessage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        if (isLoading)
+          Container(
+            color: Colors.black.withOpacity(0.3),
+            child: LoadingWidget(
+              message: loadingMessage ?? 'Loading...',
+              size: 100,
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 // Number formatting utility
 class NumberFormatter {
@@ -109,24 +195,42 @@ void main() async {
   runApp(const ExpenseTrackerApp());
 }
 
+// Theme Variants
+enum ThemeVariant {
+  standard,      // Default Material 3
+  vibrant,       // High contrast, vibrant colors
+  minimal,       // Clean, minimal design
+  neon,          // Dark with neon accents
+  nature,        // Earth tones and natural colors
+  ocean,         // Blue and teal ocean theme
+  sunset,        // Warm orange and pink tones
+  forest,        // Green forest theme
+  midnight,      // Deep dark blue theme
+  rose,          // Pink and rose theme
+  cosmic,        // Purple space theme
+  autumn,        // Orange and brown autumn theme
+  arctic,        // Cool blue and white theme
+  vintage,       // Retro brown and cream theme
+}
+
 // Theme Manager
 class ThemeManager {
   static const String _themeKey = 'theme_mode';
   static const String _accentColorKey = 'accent_color';
-  static const String _limeDarkKey = 'is_lime_dark';
+  static const String _themeVariantKey = 'theme_variant';
   static ThemeMode _themeMode = ThemeMode.system;
   static AccentColor _accentColor = AccentColor.teal;
-  static bool _isLimeDark = false;
+  static ThemeVariant _themeVariant = ThemeVariant.standard;
 
   static ThemeMode get themeMode => _themeMode;
   static AccentColor get accentColor => _accentColor;
-  static bool get isLimeDark => _isLimeDark;
+  static ThemeVariant get themeVariant => _themeVariant;
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     final themeModeIndex = prefs.getInt(_themeKey);
     final accentColorIndex = prefs.getInt(_accentColorKey);
-    final limeDark = prefs.getBool(_limeDarkKey);
+    final themeVariantIndex = prefs.getInt(_themeVariantKey);
     
     if (themeModeIndex != null) {
       _themeMode = ThemeMode.values[themeModeIndex];
@@ -136,8 +240,8 @@ class ThemeManager {
       _accentColor = AccentColor.values[accentColorIndex];
     }
     
-    if (limeDark != null) {
-      _isLimeDark = limeDark;
+    if (themeVariantIndex != null) {
+      _themeVariant = ThemeVariant.values[themeVariantIndex];
     }
   }
 
@@ -153,13 +257,46 @@ class ThemeManager {
     _accentColor = color;
   }
 
-  static Future<void> setIsLimeDark(bool value) async {
+  static Future<void> setThemeVariant(ThemeVariant variant) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_limeDarkKey, value);
-    _isLimeDark = value;
+    await prefs.setInt(_themeVariantKey, variant.index);
+    _themeVariant = variant;
   }
 
   static ThemeData getLightTheme() {
+    switch (_themeVariant) {
+      case ThemeVariant.standard:
+        return _getStandardLightTheme();
+      case ThemeVariant.vibrant:
+        return _getVibrantLightTheme();
+      case ThemeVariant.minimal:
+        return _getMinimalLightTheme();
+      case ThemeVariant.neon:
+        return _getNeonLightTheme();
+      case ThemeVariant.nature:
+        return _getNatureLightTheme();
+      case ThemeVariant.ocean:
+        return _getOceanLightTheme();
+      case ThemeVariant.sunset:
+        return _getSunsetLightTheme();
+      case ThemeVariant.forest:
+        return _getForestLightTheme();
+      case ThemeVariant.midnight:
+        return _getMidnightLightTheme();
+      case ThemeVariant.rose:
+        return _getRoseLightTheme();
+      case ThemeVariant.cosmic:
+        return _getCosmicLightTheme();
+      case ThemeVariant.autumn:
+        return _getAutumnLightTheme();
+      case ThemeVariant.arctic:
+        return _getArcticLightTheme();
+      case ThemeVariant.vintage:
+        return _getVintageLightTheme();
+    }
+  }
+
+  static ThemeData _getStandardLightTheme() {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -225,11 +362,39 @@ class ThemeManager {
   }
 
   static ThemeData getDarkTheme() {
-    // Return lime dark theme if selected
-    if (_isLimeDark) {
-      return getLimeDarkTheme();
+    switch (_themeVariant) {
+      case ThemeVariant.standard:
+        return _getStandardDarkTheme();
+      case ThemeVariant.vibrant:
+        return _getVibrantDarkTheme();
+      case ThemeVariant.minimal:
+        return _getMinimalDarkTheme();
+      case ThemeVariant.neon:
+        return _getNeonTheme();
+      case ThemeVariant.nature:
+        return _getNatureDarkTheme();
+      case ThemeVariant.ocean:
+        return _getOceanDarkTheme();
+      case ThemeVariant.sunset:
+        return _getSunsetDarkTheme();
+      case ThemeVariant.forest:
+        return _getForestDarkTheme();
+      case ThemeVariant.midnight:
+        return _getMidnightTheme();
+      case ThemeVariant.rose:
+        return _getRoseDarkTheme();
+      case ThemeVariant.cosmic:
+        return _getCosmicTheme();
+      case ThemeVariant.autumn:
+        return _getAutumnDarkTheme();
+      case ThemeVariant.arctic:
+        return _getArcticDarkTheme();
+      case ThemeVariant.vintage:
+        return _getVintageDarkTheme();
     }
-    
+  }
+
+  static ThemeData _getStandardDarkTheme() {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -371,6 +536,273 @@ class ThemeManager {
     );
   }
 
+  // Additional Light Theme Variants
+  static ThemeData _getVibrantLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: _getAccentColor(),
+        brightness: Brightness.light,
+        primary: _getAccentColor().withOpacity(0.9),
+        secondary: _getAccentColor().withOpacity(0.7),
+      ),
+    );
+  }
+
+  static ThemeData _getMinimalLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.grey.shade600,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.grey.shade50,
+    );
+  }
+
+  static ThemeData _getNeonLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.cyan,
+        brightness: Brightness.light,
+      ),
+    );
+  }
+
+  static ThemeData _getNatureLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.green.shade700,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.green.shade50,
+    );
+  }
+
+  static ThemeData _getOceanLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue.shade600,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.blue.shade50,
+    );
+  }
+
+  static ThemeData _getSunsetLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.orange.shade600,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.orange.shade50,
+    );
+  }
+
+  static ThemeData _getForestLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.green.shade800,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.green.shade50,
+    );
+  }
+
+  static ThemeData _getMidnightLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.indigo.shade800,
+        brightness: Brightness.light,
+      ),
+    );
+  }
+
+  static ThemeData _getRoseLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.pink.shade400,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.pink.shade50,
+    );
+  }
+
+  static ThemeData _getCosmicLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.deepPurple.shade600,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.deepPurple.shade50,
+    );
+  }
+
+  static ThemeData _getAutumnLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.brown.shade600,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.brown.shade50,
+    );
+  }
+
+  static ThemeData _getArcticLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.lightBlue.shade600,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.lightBlue.shade50,
+    );
+  }
+
+  static ThemeData _getVintageLightTheme() {
+    return _getStandardLightTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.brown.shade400,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: const Color(0xFFFAF7F0),
+    );
+  }
+
+  // Additional Dark Theme Variants
+  static ThemeData _getVibrantDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: _getAccentColor(),
+        brightness: Brightness.dark,
+        primary: _getAccentColor(),
+        secondary: _getAccentColor().withOpacity(0.8),
+      ),
+    );
+  }
+
+  static ThemeData _getMinimalDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.grey.shade700,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0A0A0A),
+    );
+  }
+
+  static ThemeData _getNeonTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.cyan,
+        brightness: Brightness.dark,
+        primary: Colors.cyan,
+        secondary: Colors.pink,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF000012),
+      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+    );
+  }
+
+  static ThemeData _getNatureDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.green.shade700,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0D1F0D),
+    );
+  }
+
+  static ThemeData _getOceanDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue.shade700,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0A1929),
+    );
+  }
+
+  static ThemeData _getSunsetDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.deepOrange,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF1A0E0A),
+    );
+  }
+
+  static ThemeData _getForestDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.green.shade800,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0F1B0F),
+    );
+  }
+
+  static ThemeData _getMidnightTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.indigo.shade900,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0A0E1A),
+    );
+  }
+
+  static ThemeData _getRoseDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.pink.shade600,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF1A0A14),
+    );
+  }
+
+  static ThemeData _getCosmicTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.deepPurple,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0F0A1A),
+    );
+  }
+
+  static ThemeData _getAutumnDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.brown.shade700,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF1A1410),
+    );
+  }
+
+  static ThemeData _getArcticDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.lightBlue.shade700,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0A1419),
+    );
+  }
+
+  static ThemeData _getVintageDarkTheme() {
+    return _getStandardDarkTheme().copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.brown.shade600,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF1A1612),
+    );
+  }
+
   static Color _getAccentColor() {
     switch (_accentColor) {
       case AccentColor.teal:
@@ -381,11 +813,47 @@ class ThemeManager {
         return Colors.orange;
       case AccentColor.blue:
         return Colors.blue;
+      case AccentColor.red:
+        return Colors.red;
+      case AccentColor.green:
+        return Colors.green;
+      case AccentColor.pink:
+        return Colors.pink;
+      case AccentColor.indigo:
+        return Colors.indigo;
+      case AccentColor.cyan:
+        return Colors.cyan;
+      case AccentColor.amber:
+        return Colors.amber;
+      case AccentColor.deepOrange:
+        return Colors.deepOrange;
+      case AccentColor.lightBlue:
+        return Colors.lightBlue;
+      case AccentColor.lime:
+        return Colors.lime;
+      case AccentColor.deepPurple:
+        return Colors.deepPurple;
+      case AccentColor.brown:
+        return Colors.brown;
+      case AccentColor.blueGrey:
+        return Colors.blueGrey;
+      case AccentColor.yellow:
+        return Colors.yellow;
+      case AccentColor.lightGreen:
+        return Colors.lightGreen;
+      case AccentColor.pinkAccent:
+        return Colors.pinkAccent;
+      case AccentColor.indigoAccent:
+        return Colors.indigoAccent;
     }
   }
 }
 
-enum AccentColor { teal, purple, orange, blue }
+enum AccentColor { 
+  teal, purple, orange, blue, red, green, pink, indigo, 
+  cyan, amber, deepOrange, lightBlue, lime, deepPurple, 
+  brown, blueGrey, yellow, lightGreen, pinkAccent, indigoAccent 
+}
 
 class ExpenseTrackerApp extends StatefulWidget {
   const ExpenseTrackerApp({Key? key}) : super(key: key);
@@ -397,7 +865,7 @@ class ExpenseTrackerApp extends StatefulWidget {
 class _ExpenseTrackerAppState extends State<ExpenseTrackerApp> {
   ThemeMode _currentThemeMode = ThemeManager.themeMode;
   AccentColor _currentAccentColor = ThemeManager.accentColor;
-  bool _currentIsLimeDark = ThemeManager.isLimeDark;
+  ThemeVariant _currentThemeVariant = ThemeManager.themeVariant;
 
   @override
   Widget build(BuildContext context) {
@@ -405,9 +873,7 @@ class _ExpenseTrackerAppState extends State<ExpenseTrackerApp> {
       title: 'ExTrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeManager.getLightTheme(),
-      darkTheme: ThemeManager.isLimeDark 
-          ? ThemeManager.getLimeDarkTheme() 
-          : ThemeManager.getDarkTheme(),
+      darkTheme: ThemeManager.getDarkTheme(),
       themeMode: ThemeManager.themeMode,
       home: const SplashScreen(),
     );
@@ -419,11 +885,11 @@ class _ExpenseTrackerAppState extends State<ExpenseTrackerApp> {
     // Check if theme settings have changed
     if (_currentThemeMode != ThemeManager.themeMode ||
         _currentAccentColor != ThemeManager.accentColor ||
-        _currentIsLimeDark != ThemeManager.isLimeDark) {
+        _currentThemeVariant != ThemeManager.themeVariant) {
       setState(() {
         _currentThemeMode = ThemeManager.themeMode;
         _currentAccentColor = ThemeManager.accentColor;
-        _currentIsLimeDark = ThemeManager.isLimeDark;
+        _currentThemeVariant = ThemeManager.themeVariant;
       });
     }
   }
@@ -468,8 +934,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _navigateToMainScreen() async {
-    // Simulate loading time (2 seconds)
-    await Future.delayed(const Duration(seconds: 2));
+    // Wait for animation to complete and show splash for 3 seconds
+    await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
@@ -499,24 +965,61 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDarkMode 
-          ? ThemeManager.themeMode == ThemeMode.system
-              ? const Color(0xFF121212)
-              : ThemeManager.themeMode == ThemeMode.dark
-                  ? const Color(0xFF121212)
-                  : const Color(0xFF1A1C18) // Lime dark theme
-          : Colors.white,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode 
+                ? ThemeManager.themeMode == ThemeMode.system
+                    ? [const Color(0xFF121212), const Color(0xFF1E1E1E)]
+                    : ThemeManager.themeMode == ThemeMode.dark
+                        ? [const Color(0xFF121212), const Color(0xFF1E1E1E)]
+                        : [const Color(0xFF1A1C18), const Color(0xFF2D3A24)] // Lime dark theme
+                : [Colors.white, const Color(0xFFF8F9FA)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Floating background elements
+            ...List.generate(6, (index) {
+              return Positioned(
+                left: (index * 60.0) + 20,
+                top: (index * 80.0) + 100,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(
+                        10 * math.sin(_controller.value * 2 * math.pi + index),
+                        10 * math.cos(_controller.value * 2 * math.pi + index),
+                      ),
+                      child: Opacity(
+                        opacity: 0.1,
+                        child: Icon(
+                          [Icons.attach_money, Icons.trending_up, Icons.account_balance_wallet, 
+                           Icons.savings, Icons.pie_chart, Icons.analytics][index % 6],
+                          size: 24,
+                          color: ThemeManager._getAccentColor(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            }),
+            // Main content
+            Center(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                     // Logo image
                     Image.asset('assets/logo/track.png', width: 180),
                     const SizedBox(height: 24),
@@ -536,26 +1039,93 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         color: isDarkMode ? Colors.white70 : Colors.black54,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: 1.0 + (0.05 * math.sin(_controller.value * 4 * math.pi)),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: ThemeManager._getAccentColor().withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: ThemeManager._getAccentColor().withOpacity(0.3),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: ThemeManager._getAccentColor().withOpacity(0.2),
+                                  blurRadius: 8,
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              'v2.0.0 - Advanced Budgeting',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: ThemeManager._getAccentColor(),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 32),
                     SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          ThemeManager.themeMode == ThemeMode.light
-                              ? ThemeManager._getAccentColor()
-                              : ThemeManager.themeMode == ThemeMode.dark
-                                  ? ThemeManager._getAccentColor()
-                                  : Colors.lime.shade400,
+                      width: 120,
+                      height: 120,
+                      child: Lottie.network(
+                        'https://lottie.host/embed/ff6b1182-6bf1-4697-ba0e-e27d8cf2929a/PHCPnAuukT.lottie',
+                        fit: BoxFit.contain,
+                        repeat: true,
+                        animate: true,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to local asset if network fails
+                          return Lottie.asset(
+                            'assets/animations/splash_animation.lottie',
+                            fit: BoxFit.contain,
+                            repeat: true,
+                            animate: true,
+                            errorBuilder: (context, error, stackTrace) {
+                              // Final fallback to circular progress indicator
+                              return CircularProgressIndicator(
+                                strokeWidth: 3,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  ThemeManager.themeMode == ThemeMode.light
+                                      ? ThemeManager._getAccentColor()
+                                      : ThemeManager.themeMode == ThemeMode.dark
+                                          ? ThemeManager._getAccentColor()
+                                          : Colors.lime.shade400,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Text(
+                        'Loading your financial dashboard...',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: isDarkMode ? Colors.white60 : Colors.black45,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
@@ -1234,6 +1804,47 @@ class NotificationService {
       print('Error showing test notification: $e');
     }
   }
+
+  static Future<void> showBudgetNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      await _notifications.show(
+        id,
+        title,
+        body,
+        const notifications.NotificationDetails(
+          android: notifications.AndroidNotificationDetails(
+            'budget_alerts',
+            'Budget Alerts',
+            channelDescription: 'Notifications for budget alerts and warnings',
+            importance: notifications.Importance.high,
+            priority: notifications.Priority.high,
+            category: notifications.AndroidNotificationCategory.reminder,
+            visibility: notifications.NotificationVisibility.public,
+            icon: '@mipmap/ic_launcher',
+            playSound: true,
+            enableLights: true,
+            enableVibration: true,
+            color: Color(0xFFFF6B6B), // Red color for budget alerts
+          ),
+          iOS: const notifications.DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            badgeNumber: 1,
+            interruptionLevel: notifications.InterruptionLevel.timeSensitive,
+          ),
+        ),
+      );
+
+      print('Budget notification shown: $title');
+    } catch (e) {
+      print('Error showing budget notification: $e');
+    }
+  }
 }
 
 // This function handles notification taps when the app is terminated
@@ -1348,6 +1959,202 @@ enum ReminderType {
   custom,
 }
 
+// Budget Models
+class Budget {
+  final String id;
+  final String categoryName;
+  final double amount;
+  final BudgetPeriod period;
+  final DateTime startDate;
+  final DateTime endDate;
+  final bool isActive;
+  final List<double> alertThresholds; // [50, 75, 90, 100]
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Budget({
+    required this.id,
+    required this.categoryName,
+    required this.amount,
+    required this.period,
+    required this.startDate,
+    required this.endDate,
+    this.isActive = true,
+    this.alertThresholds = const [50.0, 75.0, 90.0, 100.0],
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'categoryName': categoryName,
+    'amount': amount,
+    'period': period.toString(),
+    'startDate': startDate.toIso8601String(),
+    'endDate': endDate.toIso8601String(),
+    'isActive': isActive,
+    'alertThresholds': alertThresholds,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
+
+  factory Budget.fromJson(Map<String, dynamic> json) => Budget(
+    id: json['id'],
+    categoryName: json['categoryName'],
+    amount: json['amount'].toDouble(),
+    period: BudgetPeriod.values.firstWhere((e) => e.toString() == json['period']),
+    startDate: DateTime.parse(json['startDate']),
+    endDate: DateTime.parse(json['endDate']),
+    isActive: json['isActive'] ?? true,
+    alertThresholds: List<double>.from(json['alertThresholds'] ?? [50.0, 75.0, 90.0, 100.0]),
+    createdAt: DateTime.parse(json['createdAt']),
+    updatedAt: DateTime.parse(json['updatedAt']),
+  );
+
+  Budget copyWith({
+    String? id,
+    String? categoryName,
+    double? amount,
+    BudgetPeriod? period,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool? isActive,
+    List<double>? alertThresholds,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Budget(
+      id: id ?? this.id,
+      categoryName: categoryName ?? this.categoryName,
+      amount: amount ?? this.amount,
+      period: period ?? this.period,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      isActive: isActive ?? this.isActive,
+      alertThresholds: alertThresholds ?? this.alertThresholds,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+}
+
+enum BudgetPeriod {
+  weekly,
+  monthly,
+  quarterly,
+  yearly,
+  custom
+}
+
+class BudgetProgress {
+  final String budgetId;
+  final double spent;
+  final double remaining;
+  final double percentage;
+  final List<Transaction> transactions;
+  final DateTime lastUpdated;
+  final BudgetStatus status;
+
+  BudgetProgress({
+    required this.budgetId,
+    required this.spent,
+    required this.remaining,
+    required this.percentage,
+    required this.transactions,
+    required this.lastUpdated,
+    required this.status,
+  });
+
+  factory BudgetProgress.calculate(Budget budget, List<Transaction> allTransactions) {
+    // Filter transactions for this budget's category and time period
+    final categoryTransactions = allTransactions.where((transaction) =>
+      transaction.category == budget.categoryName &&
+      transaction.type == TransactionType.expense &&
+      transaction.date.isAfter(budget.startDate.subtract(const Duration(days: 1))) &&
+      transaction.date.isBefore(budget.endDate.add(const Duration(days: 1)))
+    ).toList();
+
+    final spent = categoryTransactions.fold<double>(0, (sum, transaction) => sum + transaction.amount);
+    final remaining = budget.amount - spent;
+    final percentage = budget.amount > 0 ? (spent / budget.amount) * 100.0 : 0.0;
+
+    BudgetStatus status;
+    if (percentage >= 100) {
+      status = BudgetStatus.exceeded;
+    } else if (percentage >= 90) {
+      status = BudgetStatus.warning;
+    } else if (percentage >= 75) {
+      status = BudgetStatus.approaching;
+    } else {
+      status = BudgetStatus.safe;
+    }
+
+    return BudgetProgress(
+      budgetId: budget.id,
+      spent: spent,
+      remaining: remaining,
+      percentage: percentage,
+      transactions: categoryTransactions,
+      lastUpdated: DateTime.now(),
+      status: status,
+    );
+  }
+}
+
+enum BudgetStatus {
+  safe,      // < 75%
+  approaching, // 75-89%
+  warning,   // 90-99%
+  exceeded   // >= 100%
+}
+
+class BudgetAlert {
+  final String id;
+  final String budgetId;
+  final AlertType type;
+  final double threshold;
+  final DateTime triggeredAt;
+  final bool isRead;
+  final String message;
+
+  BudgetAlert({
+    required this.id,
+    required this.budgetId,
+    required this.type,
+    required this.threshold,
+    required this.triggeredAt,
+    this.isRead = false,
+    required this.message,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'budgetId': budgetId,
+    'type': type.toString(),
+    'threshold': threshold,
+    'triggeredAt': triggeredAt.toIso8601String(),
+    'isRead': isRead,
+    'message': message,
+  };
+
+  factory BudgetAlert.fromJson(Map<String, dynamic> json) => BudgetAlert(
+    id: json['id'],
+    budgetId: json['budgetId'],
+    type: AlertType.values.firstWhere((e) => e.toString() == json['type']),
+    threshold: json['threshold'].toDouble(),
+    triggeredAt: DateTime.parse(json['triggeredAt']),
+    isRead: json['isRead'] ?? false,
+    message: json['message'],
+  );
+}
+
+enum AlertType {
+  approaching, // 75%
+  warning,     // 90%
+  exceeded,    // 100%+
+  weeklyReport
+}
+
 enum FilterPeriod {
   all,
   today,
@@ -1410,6 +2217,44 @@ class DataManager {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currencyKey, currency);
   }
+
+  // Budget data management
+  static const String _budgetsKey = 'budgets';
+  static const String _budgetAlertsKey = 'budget_alerts';
+
+  static Future<List<Budget>> getBudgets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? budgetsJson = prefs.getString(_budgetsKey);
+    if (budgetsJson == null) return [];
+
+    final List<dynamic> decoded = json.decode(budgetsJson);
+    return decoded.map((item) => Budget.fromJson(item)).toList();
+  }
+
+  static Future<void> saveBudgets(List<Budget> budgets) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String encoded = json.encode(
+      budgets.map((b) => b.toJson()).toList(),
+    );
+    await prefs.setString(_budgetsKey, encoded);
+  }
+
+  static Future<List<BudgetAlert>> getBudgetAlerts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? alertsJson = prefs.getString(_budgetAlertsKey);
+    if (alertsJson == null) return [];
+
+    final List<dynamic> decoded = json.decode(alertsJson);
+    return decoded.map((item) => BudgetAlert.fromJson(item)).toList();
+  }
+
+  static Future<void> saveBudgetAlerts(List<BudgetAlert> alerts) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String encoded = json.encode(
+      alerts.map((a) => a.toJson()).toList(),
+    );
+    await prefs.setString(_budgetAlertsKey, encoded);
+  }
 }
 
 // App Lifecycle Observer
@@ -1438,7 +2283,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   int _selectedIndex = 0;
   List<Transaction> _transactions = [];
   List<Reminder> _reminders = [];
+  List<Budget> _budgets = [];
+  List<BudgetAlert> _budgetAlerts = [];
   String _currency = '\$';
+  bool _isLoading = false;
   String _searchQuery = '';
   
   // Filter variables
@@ -1632,17 +2480,48 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _loadData() async {
-    final transactions = await DataManager.getTransactions();
-    final reminders = await DataManager.getReminders();
-    final currency = await DataManager.getCurrency();
-    setState(() {
-      _transactions = transactions;
-      _reminders = reminders;
-      _currency = currency;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
-    // Reschedule active reminders when app starts
-    _rescheduleReminders();
+    try {
+      final transactions = await DataManager.getTransactions();
+      final reminders = await DataManager.getReminders();
+      final budgets = await DataManager.getBudgets();
+      final budgetAlerts = await DataManager.getBudgetAlerts();
+      final currency = await DataManager.getCurrency();
+      
+      if (mounted) {
+        setState(() {
+          _transactions = transactions;
+          _reminders = reminders;
+          _budgets = budgets;
+          _budgetAlerts = budgetAlerts;
+          _currency = currency;
+          _isLoading = false;
+        });
+      }
+
+      // Reschedule active reminders when app starts
+      _rescheduleReminders();
+      
+      // Check budget status and trigger alerts if needed
+      _checkBudgetStatus();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _addTransaction(Transaction transaction) async {
@@ -1650,6 +2529,14 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       _transactions.add(transaction);
     });
     await DataManager.saveTransactions(_transactions);
+    
+    // Check budget status after adding transaction
+    _checkBudgetStatus();
+    
+    // Show budget impact for expense transactions
+    if (transaction.type == TransactionType.expense) {
+      _showBudgetImpactMessage(transaction);
+    }
   }
 
   void _updateTransaction(String id, Transaction newTransaction) async {
@@ -1833,6 +2720,198 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     }
   }
 
+  // Budget Management Methods
+  void _addBudget(Budget budget) async {
+    setState(() {
+      _budgets.add(budget);
+    });
+    await DataManager.saveBudgets(_budgets);
+    _checkBudgetStatus();
+  }
+
+  void _updateBudget(String id, Budget newBudget) async {
+    setState(() {
+      final index = _budgets.indexWhere((b) => b.id == id);
+      if (index != -1) {
+        _budgets[index] = newBudget;
+      }
+    });
+    await DataManager.saveBudgets(_budgets);
+    _checkBudgetStatus();
+  }
+
+  void _deleteBudget(String id) async {
+    setState(() {
+      _budgets.removeWhere((b) => b.id == id);
+      _budgetAlerts.removeWhere((a) => a.budgetId == id);
+    });
+    await DataManager.saveBudgets(_budgets);
+    await DataManager.saveBudgetAlerts(_budgetAlerts);
+  }
+
+  // Check budget status and create alerts
+  void _checkBudgetStatus() async {
+    final now = DateTime.now();
+    List<BudgetAlert> newAlerts = [];
+
+    for (final budget in _budgets.where((b) => b.isActive)) {
+      // Skip if budget period hasn't started or has ended
+      if (now.isBefore(budget.startDate) || now.isAfter(budget.endDate)) {
+        continue;
+      }
+
+      final progress = BudgetProgress.calculate(budget, _transactions);
+      
+      // Check each threshold
+      for (final threshold in budget.alertThresholds) {
+        if (progress.percentage >= threshold) {
+          // Check if we already have an alert for this threshold
+          final existingAlert = _budgetAlerts.any((alert) =>
+            alert.budgetId == budget.id &&
+            alert.threshold == threshold &&
+            alert.triggeredAt.isAfter(budget.startDate)
+          );
+
+          if (!existingAlert) {
+            AlertType alertType;
+            String message;
+            
+            if (threshold >= 100) {
+              alertType = AlertType.exceeded;
+              message = 'Budget exceeded! You\'ve spent ${NumberFormatter.formatCurrency(progress.spent, _currency)} of ${NumberFormatter.formatCurrency(budget.amount, _currency)} for ${budget.categoryName}.';
+            } else if (threshold >= 90) {
+              alertType = AlertType.warning;
+              message = 'Budget warning! You\'ve used ${threshold.toInt()}% of your ${budget.categoryName} budget.';
+            } else {
+              alertType = AlertType.approaching;
+              message = 'Budget alert: You\'ve used ${threshold.toInt()}% of your ${budget.categoryName} budget.';
+            }
+
+            final alert = BudgetAlert(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              budgetId: budget.id,
+              type: alertType,
+              threshold: threshold,
+              triggeredAt: now,
+              message: message,
+            );
+
+            newAlerts.add(alert);
+
+            // Send notification for budget alerts
+            _sendBudgetNotification(alert, budget);
+          }
+        }
+      }
+    }
+
+    if (newAlerts.isNotEmpty) {
+      setState(() {
+        _budgetAlerts.addAll(newAlerts);
+      });
+      await DataManager.saveBudgetAlerts(_budgetAlerts);
+    }
+  }
+
+  void _sendBudgetNotification(BudgetAlert alert, Budget budget) async {
+    try {
+      await NotificationService.showBudgetNotification(
+        id: alert.id.hashCode,
+        title: 'Budget Alert - ${budget.categoryName}',
+        body: alert.message,
+      );
+    } catch (e) {
+      print('Failed to send budget notification: $e');
+    }
+  }
+
+  void _showBudgetImpactMessage(Transaction transaction) {
+    // Find budget for this category
+    final budget = _budgets.firstWhere(
+      (b) => b.isActive && b.categoryName == transaction.category,
+      orElse: () => Budget(
+        id: '',
+        categoryName: '',
+        amount: 0,
+        period: BudgetPeriod.monthly,
+        startDate: DateTime.now(),
+        endDate: DateTime.now(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    if (budget.id.isEmpty) {
+      // No budget for this category - suggest creating one
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('💡 Consider setting a budget for ${transaction.category} to track your spending!'),
+          action: SnackBarAction(
+            label: 'CREATE',
+            onPressed: () => _showAddBudgetDialog(),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    // Calculate updated progress
+    final progress = BudgetProgress.calculate(budget, _transactions);
+    
+    String message;
+    Color backgroundColor;
+    IconData icon;
+
+    if (progress.status == BudgetStatus.exceeded) {
+      message = '⚠️ You\'ve exceeded your ${transaction.category} budget by ${NumberFormatter.formatCurrency(-progress.remaining, _currency)}';
+      backgroundColor = Colors.red;
+      icon = Icons.error;
+    } else if (progress.status == BudgetStatus.warning) {
+      message = '⚠️ You\'ve used ${progress.percentage.toStringAsFixed(0)}% of your ${transaction.category} budget';
+      backgroundColor = Colors.orange;
+      icon = Icons.warning;
+    } else if (progress.status == BudgetStatus.approaching) {
+      message = '📊 You\'ve used ${progress.percentage.toStringAsFixed(0)}% of your ${transaction.category} budget';
+      backgroundColor = Colors.yellow[700]!;
+      icon = Icons.info;
+    } else {
+      message = '✅ ${NumberFormatter.formatCurrency(progress.remaining, _currency)} remaining in your ${transaction.category} budget';
+      backgroundColor = Colors.green;
+      icon = Icons.check_circle;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: backgroundColor,
+        action: SnackBarAction(
+          label: 'VIEW',
+          textColor: Colors.white,
+          onPressed: () {
+            setState(() {
+              _selectedIndex = 2; // Navigate to budgets tab
+            });
+          },
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  List<BudgetProgress> get _budgetProgressList {
+    return _budgets
+        .where((budget) => budget.isActive)
+        .map((budget) => BudgetProgress.calculate(budget, _transactions))
+        .toList();
+  }
+
   double get _totalIncome => _transactions
       .where((t) => t.type == TransactionType.income)
       .fold(0, (sum, t) => sum + t.amount);
@@ -1936,13 +3015,17 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     final List<Widget> pages = [
       _buildDashboard(),
       _buildTransactionsList(),
+      _buildBudgets(),
       _buildReminders(),
       _buildCategories(),
       _buildSettings(),
     ];
 
-    return Scaffold(
-      body: pages[_selectedIndex],
+    return LoadingOverlay(
+      isLoading: _isLoading,
+      loadingMessage: 'Loading your financial data...',
+      child: Scaffold(
+        body: pages[_selectedIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
@@ -1950,7 +3033,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
             _selectedIndex = index;
             
             // Animate the FAB when switching tabs
-            if (_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2) {
+            if (_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2 || _selectedIndex == 3) {
               _animationController.reset();
               _animationController.forward();
             }
@@ -1960,27 +3043,32 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.list_alt_outlined),
-            selectedIcon: Icon(Icons.list_alt),
-            label: 'Transactions',
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'History',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Budget',
           ),
           NavigationDestination(
             icon: Icon(Icons.notifications_outlined),
             selectedIcon: Icon(Icons.notifications),
-            label: 'Remember',
+            label: 'Alerts',
           ),
           NavigationDestination(
             icon: Icon(Icons.category_outlined),
             selectedIcon: Icon(Icons.category),
-            label: 'Categories',
+            label: 'Tags',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'More',
           ),
         ],
       ),
@@ -1996,11 +3084,20 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           ? ScaleTransition(
               scale: _fabAnimation,
               child: FloatingActionButton(
+                onPressed: () => _showAddBudgetDialog(),
+                child: const Icon(Icons.account_balance_wallet),
+              ),
+            )
+          : _selectedIndex == 3
+          ? ScaleTransition(
+              scale: _fabAnimation,
+              child: FloatingActionButton(
                 onPressed: () => _showAddReminderDialog(),
                 child: const Icon(Icons.add_alert),
               ),
             )
           : null,
+      ),
     );
   }
 
@@ -2129,6 +3226,15 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
+              
+              // Budget Overview Section
+              if (_budgets.where((b) => b.isActive).isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _sectionHeader('Budget Overview', Icons.account_balance_wallet_outlined),
+                const SizedBox(height: 8),
+                _buildDashboardBudgetOverview(),
+              ],
+              
               // Upcoming Reminders Section
               if (upcomingReminders.isNotEmpty) ...[
                 const SizedBox(height: 24),
@@ -2219,6 +3325,181 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           style: Theme.of(context).textTheme.titleLarge,
         ),
       ],
+    );
+  }
+
+  Widget _buildDashboardBudgetOverview() {
+    final activeBudgets = _budgets.where((b) => b.isActive).toList();
+    final budgetProgressList = _budgetProgressList;
+    
+    if (activeBudgets.isEmpty) return const SizedBox.shrink();
+
+    // Get budgets that need attention (approaching or over limit)
+    final budgetsNeedingAttention = budgetProgressList
+        .where((progress) => progress.status != BudgetStatus.safe)
+        .take(3)
+        .toList();
+
+    return Column(
+      children: [
+        // Quick budget stats
+        Row(
+          children: [
+            Expanded(
+              child: _buildBudgetStatCard(
+                'Active Budgets',
+                activeBudgets.length.toString(),
+                Icons.account_balance_wallet,
+                Colors.blue,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildBudgetStatCard(
+                'Need Attention',
+                budgetsNeedingAttention.length.toString(),
+                Icons.warning,
+                budgetsNeedingAttention.isEmpty ? Colors.green : Colors.orange,
+              ),
+            ),
+          ],
+        ),
+        
+        // Show budgets that need attention
+        if (budgetsNeedingAttention.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          ...budgetsNeedingAttention.map((progress) {
+            final budget = activeBudgets.firstWhere((b) => b.id == progress.budgetId);
+            return _buildDashboardBudgetCard(budget, progress);
+          }),
+        ],
+        
+        // View all budgets button
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: () {
+            setState(() {
+              _selectedIndex = 2; // Navigate to budgets tab
+            });
+          },
+          icon: const Icon(Icons.arrow_forward),
+          label: const Text('View All Budgets'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBudgetStatCard(String title, String value, IconData icon, Color color) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardBudgetCard(Budget budget, BudgetProgress progress) {
+    Color statusColor;
+    IconData statusIcon;
+    
+    switch (progress.status) {
+      case BudgetStatus.safe:
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        break;
+      case BudgetStatus.approaching:
+        statusColor = Colors.yellow[700]!;
+        statusIcon = Icons.warning;
+        break;
+      case BudgetStatus.warning:
+        statusColor = Colors.orange;
+        statusIcon = Icons.warning;
+        break;
+      case BudgetStatus.exceeded:
+        statusColor = Colors.red;
+        statusIcon = Icons.error;
+        break;
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedIndex = 2; // Navigate to budgets tab
+          });
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: statusColor.withOpacity(0.2),
+                child: Icon(statusIcon, color: statusColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      budget.categoryName,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    LinearProgressIndicator(
+                      value: progress.percentage / 100,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      minHeight: 4,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${progress.percentage.toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    NumberFormatter.formatCurrency(progress.remaining, _currency),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: progress.remaining >= 0 ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -2573,6 +3854,344 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildBudgets() {
+    final activeBudgets = _budgets.where((b) => b.isActive).toList();
+    final budgetProgressList = _budgetProgressList;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Budgets'),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => _showBudgetInfoDialog(),
+          ),
+        ],
+      ),
+      body: activeBudgets.isEmpty
+          ? _buildEmptyBudgetsState()
+          : RefreshIndicator(
+              onRefresh: () async {
+                await _loadData();
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildBudgetOverviewCard(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Active Budgets',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...budgetProgressList.map((progress) {
+                    final budget = _budgets.firstWhere((b) => b.id == progress.budgetId);
+                    return _buildBudgetCard(budget, progress);
+                  }),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildEmptyBudgetsState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.account_balance_wallet_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Budgets Yet',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create your first budget to start\ntracking your spending limits',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _showAddBudgetDialog(),
+            icon: const Icon(Icons.add),
+            label: const Text('Create Budget'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetOverviewCard() {
+    final totalBudget = _budgets.where((b) => b.isActive).fold<double>(0, (sum, b) => sum + b.amount);
+    final totalSpent = _budgetProgressList.fold<double>(0, (sum, p) => sum + p.spent);
+    final totalRemaining = totalBudget - totalSpent;
+    final overallPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+    Color progressColor;
+    if (overallPercentage >= 100) {
+      progressColor = Colors.red;
+    } else if (overallPercentage >= 90) {
+      progressColor = Colors.orange;
+    } else if (overallPercentage >= 75) {
+      progressColor = Colors.yellow[700]!;
+    } else {
+      progressColor = Colors.green;
+    }
+
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Budget Overview',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: progressColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: progressColor.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    '${overallPercentage.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      color: progressColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              value: overallPercentage / 100,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              minHeight: 8,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildBudgetSummaryItem(
+                  'Total Budget',
+                  NumberFormatter.formatCurrency(totalBudget, _currency),
+                  Colors.blue,
+                ),
+                _buildBudgetSummaryItem(
+                  'Spent',
+                  NumberFormatter.formatCurrency(totalSpent, _currency),
+                  Colors.red,
+                ),
+                _buildBudgetSummaryItem(
+                  'Remaining',
+                  NumberFormatter.formatCurrency(totalRemaining, _currency),
+                  totalRemaining >= 0 ? Colors.green : Colors.red,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBudgetSummaryItem(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBudgetCard(Budget budget, BudgetProgress progress) {
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+
+    switch (progress.status) {
+      case BudgetStatus.safe:
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        statusText = 'On Track';
+        break;
+      case BudgetStatus.approaching:
+        statusColor = Colors.yellow[700]!;
+        statusIcon = Icons.warning;
+        statusText = 'Approaching Limit';
+        break;
+      case BudgetStatus.warning:
+        statusColor = Colors.orange;
+        statusIcon = Icons.warning;
+        statusText = 'Near Limit';
+        break;
+      case BudgetStatus.exceeded:
+        statusColor = Colors.red;
+        statusIcon = Icons.error;
+        statusText = 'Over Budget';
+        break;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => _showBudgetDetails(budget, progress),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          budget.categoryName,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _getBudgetPeriodText(budget),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(statusIcon, color: statusColor, size: 20),
+                      const SizedBox(width: 4),
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              LinearProgressIndicator(
+                value: progress.percentage / 100,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                minHeight: 6,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${NumberFormatter.formatCurrency(progress.spent, _currency)} of ${NumberFormatter.formatCurrency(budget.amount, _currency)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '${progress.percentage.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              if (progress.remaining < 0) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    'Over by ${NumberFormatter.formatCurrency(-progress.remaining, _currency)}',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getBudgetPeriodText(Budget budget) {
+    final formatter = DateFormat('MMM dd');
+    switch (budget.period) {
+      case BudgetPeriod.weekly:
+        return 'Weekly (${formatter.format(budget.startDate)} - ${formatter.format(budget.endDate)})';
+      case BudgetPeriod.monthly:
+        return 'Monthly (${DateFormat('MMMM yyyy').format(budget.startDate)})';
+      case BudgetPeriod.quarterly:
+        return 'Quarterly (${formatter.format(budget.startDate)} - ${formatter.format(budget.endDate)})';
+      case BudgetPeriod.yearly:
+        return 'Yearly (${DateFormat('yyyy').format(budget.startDate)})';
+      case BudgetPeriod.custom:
+        return 'Custom (${formatter.format(budget.startDate)} - ${formatter.format(budget.endDate)})';
+    }
+  }
+
   Widget _buildReminders() {
     final activeReminders = _reminders.where((r) => r.isActive).toList()
       ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
@@ -2880,41 +4499,6 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     }
                   },
                 ),
-                ListTile(
-                  title: const Text('Test Closed App Notification'),
-                  subtitle: const Text('Schedule notification for 1 minute, then close app'),
-                  leading: const Icon(Icons.schedule),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _scheduleTestReminder(),
-                ),
-                ListTile(
-                  title: const Text('Test Mark as Done Action'),
-                  subtitle: const Text('Simulate notification mark as done'),
-                  leading: const Icon(Icons.bug_report),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _testMarkAsDoneAction(),
-                ),
-                ListTile(
-                  title: const Text('Test Stream Update'),
-                  subtitle: const Text('Test UI update via stream'),
-                  leading: const Icon(Icons.stream),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _testStreamUpdate(),
-                ),
-                ListTile(
-                  title: const Text('Test Notification Response'),
-                  subtitle: const Text('Simulate notification action response'),
-                  leading: const Icon(Icons.notifications_active),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _testNotificationResponse(),
-                ),
-                ListTile(
-                  title: const Text('View Debug Logs'),
-                  subtitle: const Text('Check notification action logs'),
-                  leading: const Icon(Icons.bug_report),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => _showDebugLogs(),
-                ),
               ],
             ),
           ),
@@ -2947,7 +4531,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           Card(
             child: ListTile(
               title: const Text('About'),
-              subtitle: const Text('Version 1.0.0'),
+              subtitle: const Text('Version 2.0.0 - Advanced Budgeting'),
               leading: const Icon(Icons.info_outline),
             ),
           ),
@@ -2979,6 +4563,38 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         return 'Orange';
       case AccentColor.blue:
         return 'Blue';
+      case AccentColor.red:
+        return 'Red';
+      case AccentColor.green:
+        return 'Green';
+      case AccentColor.pink:
+        return 'Pink';
+      case AccentColor.indigo:
+        return 'Indigo';
+      case AccentColor.cyan:
+        return 'Cyan';
+      case AccentColor.amber:
+        return 'Amber';
+      case AccentColor.deepOrange:
+        return 'Deep Orange';
+      case AccentColor.lightBlue:
+        return 'Light Blue';
+      case AccentColor.lime:
+        return 'Lime';
+      case AccentColor.deepPurple:
+        return 'Deep Purple';
+      case AccentColor.brown:
+        return 'Brown';
+      case AccentColor.blueGrey:
+        return 'Blue Grey';
+      case AccentColor.yellow:
+        return 'Yellow';
+      case AccentColor.lightGreen:
+        return 'Light Green';
+      case AccentColor.pinkAccent:
+        return 'Pink Accent';
+      case AccentColor.indigoAccent:
+        return 'Indigo Accent';
       default:
         return 'Teal';
     }
@@ -2994,6 +4610,38 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         return Colors.orange;
       case AccentColor.blue:
         return Colors.blue;
+      case AccentColor.red:
+        return Colors.red;
+      case AccentColor.green:
+        return Colors.green;
+      case AccentColor.pink:
+        return Colors.pink;
+      case AccentColor.indigo:
+        return Colors.indigo;
+      case AccentColor.cyan:
+        return Colors.cyan;
+      case AccentColor.amber:
+        return Colors.amber;
+      case AccentColor.deepOrange:
+        return Colors.deepOrange;
+      case AccentColor.lightBlue:
+        return Colors.lightBlue;
+      case AccentColor.lime:
+        return Colors.lime;
+      case AccentColor.deepPurple:
+        return Colors.deepPurple;
+      case AccentColor.brown:
+        return Colors.brown;
+      case AccentColor.blueGrey:
+        return Colors.blueGrey;
+      case AccentColor.yellow:
+        return Colors.yellow;
+      case AccentColor.lightGreen:
+        return Colors.lightGreen;
+      case AccentColor.pinkAccent:
+        return Colors.pinkAccent;
+      case AccentColor.indigoAccent:
+        return Colors.indigoAccent;
       default:
         return Colors.teal;
     }
@@ -3003,7 +4651,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Choose Theme'),
+        title: const Text('Choose Theme Mode'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -3018,12 +4666,6 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               themeMode: ThemeMode.dark,
             ),
             _buildThemeOption(
-              title: 'Lime Dark',
-              icon: Icons.dark_mode,
-              themeMode: ThemeMode.dark,
-              isLimeDark: true,
-            ),
-            _buildThemeOption(
               title: 'System Default',
               icon: Icons.brightness_auto,
               themeMode: ThemeMode.system,
@@ -3031,6 +4673,13 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showThemeVariantDialog();
+            },
+            child: const Text('Theme Styles'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
@@ -3040,14 +4689,64 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     );
   }
 
+  void _showThemeVariantDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Theme Style'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView(
+            children: [
+              _buildThemeVariantOption('Standard', Icons.palette, ThemeVariant.standard),
+              _buildThemeVariantOption('Vibrant', Icons.color_lens, ThemeVariant.vibrant),
+              _buildThemeVariantOption('Minimal', Icons.minimize, ThemeVariant.minimal),
+              _buildThemeVariantOption('Neon', Icons.flash_on, ThemeVariant.neon),
+              _buildThemeVariantOption('Nature', Icons.eco, ThemeVariant.nature),
+              _buildThemeVariantOption('Ocean', Icons.waves, ThemeVariant.ocean),
+              _buildThemeVariantOption('Sunset', Icons.wb_sunny, ThemeVariant.sunset),
+              _buildThemeVariantOption('Forest', Icons.forest, ThemeVariant.forest),
+              _buildThemeVariantOption('Midnight', Icons.nights_stay, ThemeVariant.midnight),
+              _buildThemeVariantOption('Rose', Icons.local_florist, ThemeVariant.rose),
+              _buildThemeVariantOption('Cosmic', Icons.auto_awesome, ThemeVariant.cosmic),
+              _buildThemeVariantOption('Autumn', Icons.park, ThemeVariant.autumn),
+              _buildThemeVariantOption('Arctic', Icons.ac_unit, ThemeVariant.arctic),
+              _buildThemeVariantOption('Vintage', Icons.camera_alt, ThemeVariant.vintage),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeVariantOption(String title, IconData icon, ThemeVariant variant) {
+    final isSelected = ThemeManager.themeVariant == variant;
+    
+    return ListTile(
+      title: Text(title),
+      leading: Icon(icon),
+      trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+      onTap: () async {
+        Navigator.pop(context);
+        await ThemeManager.setThemeVariant(variant);
+        setState(() {});
+      },
+    );
+  }
+
   Widget _buildThemeOption({
     required String title,
     required IconData icon,
     required ThemeMode themeMode,
-    bool isLimeDark = false,
   }) {
-    final isSelected = ThemeManager.themeMode == themeMode && 
-        (isLimeDark ? ThemeManager.isLimeDark : !ThemeManager.isLimeDark);
+    final isSelected = ThemeManager.themeMode == themeMode;
     
     return ListTile(
       title: Text(title),
@@ -3056,50 +4755,87 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       onTap: () async {
         Navigator.pop(context);
         await ThemeManager.setThemeMode(themeMode);
-        if (isLimeDark) {
-          await ThemeManager.setIsLimeDark(true);
-        } else if (themeMode == ThemeMode.dark) {
-          await ThemeManager.setIsLimeDark(false);
-        }
         setState(() {});
       },
     );
   }
 
   void _showAccentColorDialog() {
+    final colorOptions = [
+      {'title': 'Teal', 'color': Colors.teal, 'accent': AccentColor.teal},
+      {'title': 'Purple', 'color': Colors.purple, 'accent': AccentColor.purple},
+      {'title': 'Orange', 'color': Colors.orange, 'accent': AccentColor.orange},
+      {'title': 'Blue', 'color': Colors.blue, 'accent': AccentColor.blue},
+      {'title': 'Red', 'color': Colors.red, 'accent': AccentColor.red},
+      {'title': 'Green', 'color': Colors.green, 'accent': AccentColor.green},
+      {'title': 'Pink', 'color': Colors.pink, 'accent': AccentColor.pink},
+      {'title': 'Indigo', 'color': Colors.indigo, 'accent': AccentColor.indigo},
+      {'title': 'Cyan', 'color': Colors.cyan, 'accent': AccentColor.cyan},
+      {'title': 'Amber', 'color': Colors.amber, 'accent': AccentColor.amber},
+      {'title': 'Deep Orange', 'color': Colors.deepOrange, 'accent': AccentColor.deepOrange},
+      {'title': 'Light Blue', 'color': Colors.lightBlue, 'accent': AccentColor.lightBlue},
+      {'title': 'Lime', 'color': Colors.lime, 'accent': AccentColor.lime},
+      {'title': 'Deep Purple', 'color': Colors.deepPurple, 'accent': AccentColor.deepPurple},
+      {'title': 'Brown', 'color': Colors.brown, 'accent': AccentColor.brown},
+      {'title': 'Blue Grey', 'color': Colors.blueGrey, 'accent': AccentColor.blueGrey},
+      {'title': 'Yellow', 'color': Colors.yellow, 'accent': AccentColor.yellow},
+      {'title': 'Light Green', 'color': Colors.lightGreen, 'accent': AccentColor.lightGreen},
+      {'title': 'Pink Accent', 'color': Colors.pinkAccent, 'accent': AccentColor.pinkAccent},
+      {'title': 'Indigo Accent', 'color': Colors.indigoAccent, 'accent': AccentColor.indigoAccent},
+    ];
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Choose Accent Color'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildAccentColorOption(
-              title: 'Teal',
-              color: Colors.teal,
-              accentColor: AccentColor.teal,
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              childAspectRatio: 1,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
-            _buildAccentColorOption(
-              title: 'Purple',
-              color: Colors.purple,
-              accentColor: AccentColor.purple,
-            ),
-            _buildAccentColorOption(
-              title: 'Orange',
-              color: Colors.orange,
-              accentColor: AccentColor.orange,
-            ),
-            _buildAccentColorOption(
-              title: 'Blue',
-              color: Colors.blue,
-              accentColor: AccentColor.blue,
-            ),
-          ],
+            itemCount: colorOptions.length,
+            itemBuilder: (context, index) {
+              final option = colorOptions[index];
+              final isSelected = ThemeManager.accentColor == option['accent'];
+              
+              return GestureDetector(
+                onTap: () async {
+                  Navigator.pop(context);
+                  await ThemeManager.setAccentColor(option['accent'] as AccentColor);
+                  setState(() {});
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: option['color'] as Color,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected 
+                        ? Border.all(color: Colors.white, width: 3)
+                        : null,
+                    boxShadow: isSelected 
+                        ? [BoxShadow(
+                            color: (option['color'] as Color).withOpacity(0.5),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          )]
+                        : null,
+                  ),
+                  child: isSelected 
+                      ? const Icon(Icons.check, color: Colors.white, size: 24)
+                      : null,
+                ),
+              );
+            },
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Close'),
           ),
         ],
       ),
@@ -3180,6 +4916,432 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       isScrollControlled: true,
       builder: (context) =>
           _AddReminderSheet(currency: _currency, onAdd: _addReminder),
+    );
+  }
+
+  void _showAddBudgetDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _AddBudgetSheet(
+        categories: _defaultCategories,
+        currency: _currency,
+        onAdd: _addBudget,
+      ),
+    );
+  }
+
+  void _showBudgetDetails(Budget budget, BudgetProgress progress) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  budget.categoryName,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Progress Card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Progress',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _getBudgetStatusColor(progress.status).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: _getBudgetStatusColor(progress.status).withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            '${progress.percentage.toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              color: _getBudgetStatusColor(progress.status),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    LinearProgressIndicator(
+                      value: progress.percentage / 100,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(_getBudgetStatusColor(progress.status)),
+                      minHeight: 8,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildDetailItem('Budget', NumberFormatter.formatCurrency(budget.amount, _currency), Colors.blue),
+                        _buildDetailItem('Spent', NumberFormatter.formatCurrency(progress.spent, _currency), Colors.red),
+                        _buildDetailItem('Remaining', NumberFormatter.formatCurrency(progress.remaining, _currency), 
+                          progress.remaining >= 0 ? Colors.green : Colors.red),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Budget Info
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Budget Information',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildInfoRow('Period', _getBudgetPeriodText(budget)),
+                    _buildInfoRow('Transactions', '${progress.transactions.length} transactions'),
+                    _buildInfoRow('Daily Average', _calculateDailyAverage(budget, progress)),
+                    _buildInfoRow('Status', _getBudgetStatusText(progress.status)),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Smart Insights
+            Card(
+              color: Theme.of(context).primaryColor.withOpacity(0.05),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.lightbulb_outline, color: Theme.of(context).primaryColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Smart Insights',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ..._generateBudgetInsights(budget, progress),
+                  ],
+                ),
+              ),
+            ),
+            
+            const Spacer(),
+            
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showEditBudgetDialog(budget);
+                    },
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Edit Budget'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _confirmDeleteBudget(budget.id);
+                    },
+                    icon: const Icon(Icons.delete),
+                    label: const Text('Delete'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[600])),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _generateBudgetInsights(Budget budget, BudgetProgress progress) {
+    List<Widget> insights = [];
+    
+    // Calculate days remaining in budget period
+    final now = DateTime.now();
+    final daysRemaining = budget.endDate.difference(now).inDays;
+    final totalDays = budget.endDate.difference(budget.startDate).inDays;
+    final daysElapsed = totalDays - daysRemaining;
+    
+    if (progress.status == BudgetStatus.exceeded) {
+      insights.add(_buildInsightItem(
+        Icons.error,
+        'Budget Exceeded',
+        'You\'ve overspent by ${NumberFormatter.formatCurrency(-progress.remaining, _currency)}. Consider reviewing your spending habits.',
+        Colors.red,
+      ));
+    } else if (progress.status == BudgetStatus.warning) {
+      insights.add(_buildInsightItem(
+        Icons.warning,
+        'Approaching Limit',
+        'You\'re close to your budget limit with $daysRemaining days remaining. Spend carefully!',
+        Colors.orange,
+      ));
+    } else if (daysRemaining > 0) {
+      final dailyBudgetRemaining = progress.remaining / daysRemaining;
+      insights.add(_buildInsightItem(
+        Icons.info,
+        'Daily Budget',
+        'You can spend ${NumberFormatter.formatCurrency(dailyBudgetRemaining, _currency)} per day for the remaining $daysRemaining days.',
+        Colors.blue,
+      ));
+    }
+    
+    // Spending pace insight
+    if (daysElapsed > 0 && progress.spent > 0) {
+      final dailySpendingRate = progress.spent / daysElapsed;
+      final projectedSpending = dailySpendingRate * totalDays;
+      
+      if (projectedSpending > budget.amount) {
+        insights.add(_buildInsightItem(
+          Icons.trending_up,
+          'Spending Pace',
+          'At your current pace, you\'ll exceed your budget by ${NumberFormatter.formatCurrency(projectedSpending - budget.amount, _currency)}.',
+          Colors.orange,
+        ));
+      } else {
+        insights.add(_buildInsightItem(
+          Icons.trending_down,
+          'Good Pace',
+          'Your spending pace is on track. You\'re projected to save ${NumberFormatter.formatCurrency(budget.amount - projectedSpending, _currency)}.',
+          Colors.green,
+        ));
+      }
+    }
+    
+    return insights;
+  }
+
+  Widget _buildInsightItem(IconData icon, String title, String description, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getBudgetStatusColor(BudgetStatus status) {
+    switch (status) {
+      case BudgetStatus.safe:
+        return Colors.green;
+      case BudgetStatus.approaching:
+        return Colors.yellow[700]!;
+      case BudgetStatus.warning:
+        return Colors.orange;
+      case BudgetStatus.exceeded:
+        return Colors.red;
+    }
+  }
+
+  String _getBudgetStatusText(BudgetStatus status) {
+    switch (status) {
+      case BudgetStatus.safe:
+        return 'On Track';
+      case BudgetStatus.approaching:
+        return 'Approaching Limit';
+      case BudgetStatus.warning:
+        return 'Near Limit';
+      case BudgetStatus.exceeded:
+        return 'Over Budget';
+    }
+  }
+
+  String _calculateDailyAverage(Budget budget, BudgetProgress progress) {
+    final totalDays = budget.endDate.difference(budget.startDate).inDays;
+    final daysElapsed = DateTime.now().difference(budget.startDate).inDays;
+    
+    if (daysElapsed <= 0) return NumberFormatter.formatCurrency(0, _currency);
+    
+    final dailyAverage = progress.spent / daysElapsed;
+    return NumberFormatter.formatCurrency(dailyAverage, _currency);
+  }
+
+  void _showEditBudgetDialog(Budget budget) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _AddBudgetSheet(
+        categories: _defaultCategories,
+        currency: _currency,
+        onAdd: (newBudget) {
+          _updateBudget(budget.id, newBudget);
+        },
+        budget: budget,
+      ),
+    );
+  }
+
+  void _confirmDeleteBudget(String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Budget'),
+        content: const Text('Are you sure you want to delete this budget?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              _deleteBudget(id);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBudgetInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About Budgets'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Budgets help you control spending by setting limits for each category.',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            Text('• Green: Safe (under 75%)'),
+            Text('• Yellow: Approaching limit (75-89%)'),
+            Text('• Orange: Near limit (90-99%)'),
+            Text('• Red: Over budget (100%+)'),
+            SizedBox(height: 12),
+            Text(
+              'You\'ll receive notifications when approaching your budget limits.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -3524,217 +5686,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     );
   }
 
-  void _scheduleTestReminder() async {
-    final testDateTime = DateTime.now().add(const Duration(minutes: 1));
-    
-    try {
-      await NotificationService.scheduleNotification(
-        id: 999998, // Special ID for test
-        title: 'Test Reminder - App Closed',
-        body: 'If you see this notification, it means notifications work when the app is closed! 🎉',
-        scheduledDate: testDateTime,
-        payload: json.encode({'test': true, 'closed_app_test': true}),
-      );
-      
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Test Scheduled'),
-          content: Text(
-            'A test notification has been scheduled for ${DateFormat('hh:mm a').format(testDateTime)}.\n\n'
-            'To test if notifications work when app is closed:\n'
-            '1. Close this app completely (remove from recent apps)\n'
-            '2. Wait for the notification\n'
-            '3. If you receive it, notifications are working correctly!',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to schedule test: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 
-  void _testMarkAsDoneAction() async {
-    // Find the first active reminder to test with
-    final activeReminders = _reminders.where((r) => r.isActive).toList();
-    final activeReminder = activeReminders.isNotEmpty ? activeReminders.first : null;
-    
-    if (activeReminder == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No active reminders to test with. Create a reminder first.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    
-    // Create test payload
-    final testPayload = json.encode({
-      'id': activeReminder.id,
-      'type': activeReminder.type.toString(),
-      'title': activeReminder.title,
-    });
-    
-    print('Testing mark as done with payload: $testPayload');
-    
-    // Simulate the notification action
-    await NotificationService._handleMarkAsDoneAction(testPayload);
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tested mark as done for: ${activeReminder.title}'),
-        backgroundColor: Colors.blue,
-      ),
-    );
-  }
-
-  void _testStreamUpdate() async {
-    // Find the first active reminder to test with
-    final activeReminders = _reminders.where((r) => r.isActive).toList();
-    final activeReminder = activeReminders.isNotEmpty ? activeReminders.first : null;
-    
-    if (activeReminder == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No active reminders to test with. Create a reminder first.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    
-    print('Testing stream update for reminder: ${activeReminder.id}');
-    
-    // Manually mark the reminder as done in storage
-    final updatedReminder = Reminder(
-      id: activeReminder.id,
-      title: activeReminder.title,
-      description: activeReminder.description,
-      dateTime: activeReminder.dateTime,
-      type: activeReminder.type,
-      isActive: false,
-      amount: activeReminder.amount,
-    );
-    
-    // Update in memory
-    final index = _reminders.indexWhere((r) => r.id == activeReminder.id);
-    if (index != -1) {
-      _reminders[index] = updatedReminder;
-    }
-    
-    // Save to storage
-    await DataManager.saveReminders(_reminders);
-    
-    // Trigger stream update
-    ReminderUpdateNotifier.notifyReminderUpdated(activeReminder.id);
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Stream update test for: ${activeReminder.title}'),
-        backgroundColor: Colors.purple,
-      ),
-    );
-  }
-
-  void _testNotificationResponse() async {
-    // Find the first active reminder to test with
-    final activeReminders = _reminders.where((r) => r.isActive).toList();
-    final activeReminder = activeReminders.isNotEmpty ? activeReminders.first : null;
-    
-    if (activeReminder == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No active reminders to test with. Create a reminder first.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    
-    // Create test payload
-    final testPayload = json.encode({
-      'id': activeReminder.id,
-      'type': activeReminder.type.toString(),
-      'title': activeReminder.title,
-    });
-    
-    print('Testing notification response with payload: $testPayload');
-    
-    // Create a mock notification response
-    final mockResponse = notifications.NotificationResponse(
-      notificationResponseType: notifications.NotificationResponseType.selectedNotificationAction,
-      actionId: markAsDoneActionId,
-      payload: testPayload,
-    );
-    
-    // Call the notification response handler directly
-    NotificationService.onNotificationResponse(mockResponse);
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Notification response test for: ${activeReminder.title}'),
-        backgroundColor: Colors.indigo,
-      ),
-    );
-  }
-
-  void _showDebugLogs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> logs = prefs.getStringList('debug_logs') ?? [];
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Debug Logs'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 400,
-          child: logs.isEmpty
-              ? const Center(child: Text('No debug logs found'))
-              : ListView.builder(
-                  itemCount: logs.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Text(
-                        logs[logs.length - 1 - index], // Show newest first
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    );
-                  },
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await prefs.remove('debug_logs');
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Debug logs cleared')),
-              );
-            },
-            child: const Text('Clear Logs'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showExportDialog() {
     showDialog(
@@ -5390,6 +7342,453 @@ class _AddReminderSheetState extends State<_AddReminderSheet> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+}
+
+// Add Budget Sheet
+class _AddBudgetSheet extends StatefulWidget {
+  final List<Category> categories;
+  final String currency;
+  final Function(Budget) onAdd;
+  final Budget? budget;
+
+  const _AddBudgetSheet({
+    required this.categories,
+    required this.currency,
+    required this.onAdd,
+    this.budget,
+  });
+
+  @override
+  State<_AddBudgetSheet> createState() => _AddBudgetSheetState();
+}
+
+class _AddBudgetSheetState extends State<_AddBudgetSheet> {
+  late TextEditingController _amountController;
+  String _selectedCategory = '';
+  BudgetPeriod _selectedPeriod = BudgetPeriod.monthly;
+  DateTime _startDate = DateTime.now();
+  DateTime _endDate = DateTime.now().add(const Duration(days: 30));
+  List<double> _alertThresholds = [50.0, 75.0, 90.0, 100.0];
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController();
+    
+    if (widget.budget != null) {
+      // Editing existing budget
+      _amountController.text = widget.budget!.amount.toString();
+      _selectedCategory = widget.budget!.categoryName;
+      _selectedPeriod = widget.budget!.period;
+      _startDate = widget.budget!.startDate;
+      _endDate = widget.budget!.endDate;
+      _alertThresholds = List.from(widget.budget!.alertThresholds);
+    } else {
+      // Creating new budget
+      _selectedCategory = widget.categories.first.name;
+      _calculateEndDate();
+    }
+  }
+
+  void _calculateEndDate() {
+    switch (_selectedPeriod) {
+      case BudgetPeriod.weekly:
+        _endDate = _startDate.add(const Duration(days: 7));
+        break;
+      case BudgetPeriod.monthly:
+        _endDate = DateTime(_startDate.year, _startDate.month + 1, _startDate.day);
+        break;
+      case BudgetPeriod.quarterly:
+        _endDate = DateTime(_startDate.year, _startDate.month + 3, _startDate.day);
+        break;
+      case BudgetPeriod.yearly:
+        _endDate = DateTime(_startDate.year + 1, _startDate.month, _startDate.day);
+        break;
+      case BudgetPeriod.custom:
+        // Keep current end date for custom period
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.budget != null ? 'Edit Budget' : 'Create Budget'),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: [
+            TextButton(
+              onPressed: _saveBudget,
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle('Category'),
+              _buildCategorySelector(),
+              const SizedBox(height: 24),
+              
+              _buildSectionTitle('Budget Amount'),
+              _buildAmountInput(),
+              const SizedBox(height: 24),
+              
+              _buildSectionTitle('Budget Period'),
+              _buildPeriodSelector(),
+              const SizedBox(height: 24),
+              
+              if (_selectedPeriod == BudgetPeriod.custom) ...[
+                _buildSectionTitle('Custom Date Range'),
+                _buildDateRangeSelector(),
+                const SizedBox(height: 24),
+              ],
+              
+              _buildSectionTitle('Alert Thresholds'),
+              _buildAlertThresholdSelector(),
+              const SizedBox(height: 24),
+              
+              _buildBudgetPreview(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySelector() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Select Category'),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: widget.categories.map((category) {
+                final isSelected = _selectedCategory == category.name;
+                return FilterChip(
+                  label: Text(category.name),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      _selectedCategory = category.name;
+                    });
+                  },
+                  avatar: Icon(
+                    category.icon,
+                    size: 18,
+                    color: isSelected ? Colors.white : category.color,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmountInput() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: TextField(
+          controller: _amountController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: 'Budget Amount',
+            prefixText: widget.currency,
+            border: const OutlineInputBorder(),
+            hintText: 'Enter budget amount',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriodSelector() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Budget Period'),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: BudgetPeriod.values.map((period) {
+                final isSelected = _selectedPeriod == period;
+                return FilterChip(
+                  label: Text(_getPeriodName(period)),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      _selectedPeriod = period;
+                      if (period != BudgetPeriod.custom) {
+                        _calculateEndDate();
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateRangeSelector() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            ListTile(
+              title: const Text('Start Date'),
+              subtitle: Text(DateFormat('MMM dd, yyyy').format(_startDate)),
+              trailing: const Icon(Icons.calendar_today),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _startDate,
+                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (date != null) {
+                  setState(() {
+                    _startDate = date;
+                  });
+                }
+              },
+            ),
+            const Divider(),
+            ListTile(
+              title: const Text('End Date'),
+              subtitle: Text(DateFormat('MMM dd, yyyy').format(_endDate)),
+              trailing: const Icon(Icons.calendar_today),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _endDate,
+                  firstDate: _startDate,
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (date != null) {
+                  setState(() {
+                    _endDate = date;
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlertThresholdSelector() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Get notified when you reach:'),
+            const SizedBox(height: 12),
+            ...['50%', '75%', '90%', '100%'].asMap().entries.map((entry) {
+              final index = entry.key;
+              final label = entry.value;
+              final threshold = [50.0, 75.0, 90.0, 100.0][index];
+              final isEnabled = _alertThresholds.contains(threshold);
+              
+              return CheckboxListTile(
+                title: Text(label),
+                subtitle: Text(_getThresholdDescription(threshold)),
+                value: isEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      if (!_alertThresholds.contains(threshold)) {
+                        _alertThresholds.add(threshold);
+                        _alertThresholds.sort();
+                      }
+                    } else {
+                      _alertThresholds.remove(threshold);
+                    }
+                  });
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBudgetPreview() {
+    final amount = double.tryParse(_amountController.text) ?? 0;
+    if (amount <= 0) return const SizedBox.shrink();
+
+    return Card(
+      color: Theme.of(context).primaryColor.withOpacity(0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Budget Preview',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Category:'),
+                Text(_selectedCategory, style: const TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Amount:'),
+                Text(
+                  NumberFormatter.formatCurrency(amount, widget.currency),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Period:'),
+                Text(_getPeriodName(_selectedPeriod), style: const TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Duration:'),
+                Text(
+                  '${DateFormat('MMM dd').format(_startDate)} - ${DateFormat('MMM dd').format(_endDate)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getPeriodName(BudgetPeriod period) {
+    switch (period) {
+      case BudgetPeriod.weekly:
+        return 'Weekly';
+      case BudgetPeriod.monthly:
+        return 'Monthly';
+      case BudgetPeriod.quarterly:
+        return 'Quarterly';
+      case BudgetPeriod.yearly:
+        return 'Yearly';
+      case BudgetPeriod.custom:
+        return 'Custom';
+    }
+  }
+
+  String _getThresholdDescription(double threshold) {
+    switch (threshold) {
+      case 50.0:
+        return 'Halfway through your budget';
+      case 75.0:
+        return 'Approaching your limit';
+      case 90.0:
+        return 'Near your budget limit';
+      case 100.0:
+        return 'Budget limit reached';
+      default:
+        return '';
+    }
+  }
+
+  void _saveBudget() {
+    final amount = double.tryParse(_amountController.text);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid budget amount')),
+      );
+      return;
+    }
+
+    if (_selectedCategory.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return;
+    }
+
+    if (_endDate.isBefore(_startDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('End date must be after start date')),
+      );
+      return;
+    }
+
+    final budget = Budget(
+      id: widget.budget?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      categoryName: _selectedCategory,
+      amount: amount,
+      period: _selectedPeriod,
+      startDate: _startDate,
+      endDate: _endDate,
+      alertThresholds: _alertThresholds,
+      createdAt: widget.budget?.createdAt ?? DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    widget.onAdd(budget);
+    Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
     _amountController.dispose();
     super.dispose();
   }
